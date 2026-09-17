@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manche — les gammes sous les doigts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14100c;
+    --bg-2: #1c1610;
+    --wood: #4a2f1c;
+    --wood-light: #6b4326;
+    --fingerboard: #2a1c12;
+    --fret-wire: #b9ae9c;
+    --nut: #e8dcc0;
+    --inlay: #e8dcc0;
+    --ink: #f3ead9;
+    --muted: #a08d76;
+    --muted-2: #6f5f4c;
+    --root: #d1a233;
+    --root-ink: #241a08;
+    --scale: #6f9169;
+    --scale-ink: #16211a;
+    --out: #3a3025;
+    --card: #201810;
+    --card-border: #3a2c1c;
+    --line: #382a1a;
+    --focus: #e8b84b;
+    --wrong: #a4483a;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(209,162,51,0.10), transparent 60%),
+      radial-gradient(ellipse 700px 500px at 100% 10%, rgba(111,145,105,0.08), transparent 55%),
+      var(--bg);
+  }
+
+  .wrap {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .wordmark {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: 28px;
+    letter-spacing: 0.2px;
+    color: var(--ink);
+  }
+  .wordmark span { color: var(--root); font-style: normal; }
+
+  .tagline {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    max-width: 40ch;
+  }
+
+  /* notation toggle — styled like an amp rocker switch */
+  .notation-toggle {
+    position: relative;
+    display: inline-flex;
+    background: var(--fingerboard);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 3px;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .notation-toggle .seg {
+    position: relative;
+    z-index: 2;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    transition: color .25s ease;
+    white-space: nowrap;
+  }
+  .notation-toggle .seg.active { color: var(--root-ink); }
+  .notation-toggle .thumb {
+    position: absolute;
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc(50% - 3px);
+    background: var(--root);
+    border-radius: 999px;
+    transition: transform .25s cubic-bezier(.4,0,.2,1);
+    z-index: 1;
+  }
+  .notation-toggle[data-mode="en"] .thumb,
+  .notation-toggle[data-mode="quiz"] .thumb { transform: translateX(100%); }
+
+  /* ---- instrument select screen ---- */
+  #screen-select h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 1.25;
+    max-width: 20ch;
+    margin: 0 0 8px;
+  }
+  #screen-select p.lead {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 52ch;
+    margin: 0 0 32px;
+    line-height: 1.6;
+  }
+
+  .instrument-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .instrument-grid { grid-template-columns: 1fr; }
+  }
+
+  .inst-card {
+    background: linear-gradient(160deg, var(--card), var(--bg-2));
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 22px 20px 20px;
+    text-align: left;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color .2s ease, transform .2s ease, background .2s ease;
+  }
+  .inst-card:hover, .inst-card:focus-visible {
+    border-color: var(--root);
+    transform: translateY(-2px);
+  }
+  .inst-card:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+  .inst-card svg { width: 100%; height: 76px; }
+  .inst-card .name {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 19px;
+    font-weight: 600;
+  }
+  .inst-card .meta {
+    font-size: 12.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .inst-card .badge {
+    font-size: 11px;
+    color: var(--scale);
+    border: 1px solid rgba(111,145,105,0.4);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+
+  /* ---- fretboard screen ---- */
+  #screen-board { display: none; }
+
+  .back-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 6px 0;
+  }
+  .back-btn:hover { color: var(--ink); }
+  .inst-title {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .control label {
+    font-size: 11.5px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .control select {
+    background: var(--fingerboard);
+    color: var(--ink);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 10px 34px 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 500;
+    min-width: 190px;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 13px) calc(50% - 3px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    cursor: pointer;
+  }
+  .control select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .quiz-card {
+    display: none;
+    background: linear-gradient(160deg, var(--card), var(--bg-2));
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .quiz-card .quiz-target-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .quiz-card .quiz-target-name {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: 30px;
+    color: var(--root);
+  }
+  .quiz-card .quiz-feedback {
+    font-size: 13.5px;
+    color: var(--muted);
+    min-height: 18px;
+    margin-top: 4px;
+  }
+  .quiz-card .quiz-feedback.is-correct { color: var(--scale); font-weight: 600; }
+  .quiz-card .quiz-feedback.is-wrong { color: var(--wrong); font-weight: 600; }
+  .quiz-card .quiz-score {
+    font-size: 13px;
+    color: var(--muted);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 7px 14px;
+    white-space: nowrap;
+  }
+  .quiz-card .quiz-score b { color: var(--ink); }
+  .quiz-card .quiz-actions { display: flex; gap: 8px; margin-left: auto; }
+  .quiz-btn {
+    background: var(--fingerboard);
+    border: 1px solid var(--card-border);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .quiz-btn:hover { border-color: var(--root); }
+  .quiz-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .board-scroll {
+    overflow-x: auto;
+    padding: 6px 0 18px;
+    margin: 0 -6px;
+  }
+  .board-scroll svg { display: block; }
+
+  .board-scroll::-webkit-scrollbar { height: 8px; }
+  .board-scroll::-webkit-scrollbar-track { background: transparent; }
+  .board-scroll::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 8px; }
+
+  .note-dot { cursor: pointer; }
+  .note-dot:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .legend {
+    display: flex;
+    gap: 18px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--muted);
+    margin: 4px 2px 26px;
+  }
+  .legend .item { display: flex; align-items: center; gap: 7px; }
+  .legend .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+  .panel {
+    background: linear-gradient(160deg, var(--card), var(--bg-2));
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    min-height: 108px;
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .panel .placeholder {
+    color: var(--muted-2);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .panel .note-big {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 40px;
+    font-weight: 600;
+    min-width: 76px;
+    text-align: center;
+    padding: 6px 10px;
+    border-radius: 10px;
+  }
+  .panel .note-big.role-root { background: rgba(209,162,51,0.16); color: var(--root); }
+  .panel .note-big.role-scale { background: rgba(111,145,105,0.16); color: var(--scale); }
+  .panel .note-big.role-out { background: rgba(255,255,255,0.03); color: var(--muted); }
+
+  .panel .detail { flex: 1; min-width: 220px; }
+  .panel .detail .loc {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: none;
+    margin-bottom: 6px;
+  }
+  .panel .detail .role-line {
+    font-size: 14.5px;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .panel .detail .role-line.role-root { color: var(--root); }
+  .panel .detail .role-line.role-scale { color: var(--scale); }
+  .panel .detail .role-line.role-out { color: var(--muted); }
+  .panel .detail p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 56ch;
+  }
+
+  footer.hint {
+    text-align: center;
+    color: var(--muted-2);
+    font-size: 12px;
+    margin-top: 30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <div class="wordmark">Ma<span>n</span>che</div>
+      <div class="tagline">Visualise, sur le manche, quelles notes sonnent juste avec chaque gamme.</div>
+    </div>
+    <div class="notation-toggle" id="notationToggle" data-mode="fr" role="button" tabindex="0" aria-label="Basculer la notation des notes entre Do et C">
+      <div class="thumb"></div>
+      <div class="seg active" data-mode="fr">Do·Ré·Mi</div>
+      <div class="seg" data-mode="en">C·D·E</div>
+    </div>
+  </header>
+
+  <!-- SCREEN 1 : instrument choice -->
+  <section id="screen-select">
+    <h1>Choisis ton instrument</h1>
+    <p class="lead">La basse 4 cordes est le terrain de jeu principal de l'appli pour l'instant — guitare et basse 5 cordes sont déjà jouables, avec plus de finitions à venir.</p>
+
+    <div class="instrument-grid">
+      <button class="inst-card" data-instrument="bass4">
+        <svg viewBox="0 0 200 76" fill="none"><path d="M18 38 C18 20, 30 8, 46 8 L150 8" stroke="#8a5a34" stroke-width="4" stroke-linecap="round"/><circle cx="18" cy="38" r="15" fill="#3a2818" stroke="#8a5a34" stroke-width="2"/><path d="M46 8 L46 68 C46 68 60 74 80 74 C104 74 118 62 118 46 C118 30 104 18 80 18 C64 18 52 22 46 30" fill="#5c3a21" stroke="#8a5a34" stroke-width="2"/><line x1="46" y1="18" x2="150" y2="18" stroke="#c7bda9" stroke-width="1.4"/><line x1="46" y1="27" x2="130" y2="27" stroke="#c7bda9" stroke-width="1.4"/><line x1="46" y1="36" x2="130" y2="36" stroke="#c7bda9" stroke-width="1.4"/><line x1="46" y1="45" x2="150" y2="45" stroke="#c7bda9" stroke-width="1.4"/></svg>
+        <div class="name">Basse 4 cordes</div>
+        <div class="meta"><span>Mi · La · Ré · Sol</span><span class="badge">Focus</span></div>
+      </button>
+
+      <button class="inst-card" data-instrument="bass5">
+        <svg viewBox="0 0 200 76" fill="none"><path d="M18 38 C18 20, 30 8, 46 8 L150 8" stroke="#8a5a34" stroke-width="4" stroke-linecap="round"/><circle cx="18" cy="38" r="15" fill="#3a2818" stroke="#8a5a34" stroke-width="2"/><path d="M46 8 L46 68 C46 68 60 74 80 74 C104 74 118 62 118 46 C118 30 104 18 80 18 C64 18 52 22 46 30" fill="#5c3a21" stroke="#8a5a34" stroke-width="2"/><line x1="46" y1="16" x2="150" y2="16" stroke="#c7bda9" stroke-width="1.3"/><line x1="46" y1="24" x2="132" y2="24" stroke="#c7bda9" stroke-width="1.3"/><line x1="46" y1="32" x2="130" y2="32" stroke="#c7bda9" stroke-width="1.3"/><line x1="46" y1="40" x2="130" y2="40" stroke="#c7bda9" stroke-width="1.3"/><line x1="46" y1="48" x2="150" y2="48" stroke="#c7bda9" stroke-width="1.3"/></svg>
+        <div class="name">Basse 5 cordes</div>
+        <div class="meta"><span>Si · Mi · La · Ré · Sol</span><span class="badge">Grave étendu</span></div>
+      </button>
+
+      <button class="inst-card" data-instrument="guitar">
+        <svg viewBox="0 0 200 76" fill="none"><path d="M18 38 C18 20, 30 8, 46 8 L150 8" stroke="#8a5a34" stroke-width="4" stroke-linecap="round"/><circle cx="18" cy="38" r="15" fill="#3a2818" stroke="#8a5a34" stroke-width="2"/><path d="M46 8 L46 68 C40 68 30 60 32 48 C34 36 46 32 46 32 C46 32 34 26 36 16 C38 8 46 8 46 8" fill="none" stroke="#8a5a34" stroke-width="2"/><path d="M46 8 L150 8 L150 68 L46 68 C40 68 34 62 34 46 C34 32 42 22 46 18 Z" fill="#5c3a21" stroke="#8a5a34" stroke-width="2" opacity="0.001"/><ellipse cx="88" cy="42" rx="46" ry="30" fill="#5c3a21" stroke="#8a5a34" stroke-width="2"/><circle cx="102" cy="42" r="12" fill="#241a10"/><line x1="46" y1="15" x2="150" y2="15" stroke="#c7bda9" stroke-width="1.2"/><line x1="46" y1="22" x2="150" y2="22" stroke="#c7bda9" stroke-width="1.2"/><line x1="46" y1="29" x2="150" y2="29" stroke="#c7bda9" stroke-width="1.2"/><line x1="46" y1="36" x2="150" y2="36" stroke="#c7bda9" stroke-width="1.2"/><line x1="46" y1="43" x2="150" y2="43" stroke="#c7bda9" stroke-width="1.2"/><line x1="46" y1="50" x2="150" y2="50" stroke="#c7bda9" stroke-width="1.2"/></svg>
+        <div class="name">Guitare</div>
+        <div class="meta"><span>Mi · La · Ré · Sol · Si · Mi</span><span class="badge">6 cordes</span></div>
+      </button>
+    </div>
+  </section>
+
+  <!-- SCREEN 2 : interactive fretboard -->
+  <section id="screen-board">
+    <div class="back-row">
+      <button class="back-btn" id="backBtn">← Changer d'instrument</button>
+      <span style="color:var(--muted-2)">·</span>
+      <span class="inst-title" id="instTitle">Basse 4 cordes</span>
+      <div class="notation-toggle" id="modeToggle" data-mode="explore" role="button" tabindex="0" aria-label="Basculer entre le mode Explorer et le mode Quiz" style="margin-left:auto">
+        <div class="thumb"></div>
+        <div class="seg active" data-mode="explore">Explorer</div>
+        <div class="seg" data-mode="quiz">Quiz</div>
+      </div>
+    </div>
+
+    <div class="controls" id="exploreControls">
+      <div class="control">
+        <label for="rootSelect">Fondamentale</label>
+        <select id="rootSelect"></select>
+      </div>
+      <div class="control">
+        <label for="scaleSelect">Gamme</label>
+        <select id="scaleSelect"></select>
+      </div>
+    </div>
+
+    <div class="quiz-card" id="quizControls">
+      <div>
+        <div class="quiz-target-label">Trouve la note :</div>
+        <div class="quiz-target-name" id="quizTargetName">Sol</div>
+        <div class="quiz-feedback" id="quizFeedback">Clique sur le manche là où tu penses la trouver.</div>
+      </div>
+      <div class="quiz-score">Score : <b id="quizScore">0 / 0</b></div>
+      <div class="quiz-actions">
+        <button class="quiz-btn" id="quizSkipBtn">Passer</button>
+        <button class="quiz-btn" id="quizResetBtn">Nouvelle partie</button>
+      </div>
+    </div>
+
+    <div class="board-scroll" id="boardScroll"></div>
+
+    <div class="legend" id="legend">
+      <span class="item"><span class="swatch" style="background:var(--root)"></span> Fondamentale</span>
+      <span class="item"><span class="swatch" style="background:var(--scale)"></span> Note de la gamme</span>
+      <span class="item"><span class="swatch" style="background:var(--out); border:1px solid var(--card-border)"></span> Hors gamme</span>
+    </div>
+
+    <div class="panel" id="panel">
+      <div class="placeholder">Clique sur une note du manche pour découvrir son rôle dans la gamme choisie.</div>
+    </div>
+  </section>
+
+  <footer class="hint">Prototype en construction progressive — la suite arrive bientôt.</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- music theory data ----------
+  var NAMES_FR = ["Do","Do♯","Ré","Ré♯","Mi","Fa","Fa♯","Sol","Sol♯","La","La♯","Si"];
+  var NAMES_EN = ["C","C♯","D","D♯","E","F","F♯","G","G♯","A","A♯","B"];
+
+  var SCALES = [
+    { key:"major",       label:"Majeur (Ionien)",        intervals:[0,2,4,5,7,9,11] },
+    { key:"naturalMinor", label:"Mineur naturel (Éolien)", intervals:[0,2,3,5,7,8,10] },
+    { key:"harmonicMinor", label:"Mineur harmonique",      intervals:[0,2,3,5,7,8,11] },
+    { key:"melodicMinor", label:"Mineur mélodique",        intervals:[0,2,3,5,7,9,11] },
+    { key:"dorian",       label:"Dorien",                  intervals:[0,2,3,5,7,9,10] },
+    { key:"mixolydian",   label:"Mixolydien",              intervals:[0,2,4,5,7,9,10] },
+    { key:"majorPenta",   label:"Pentatonique majeure",    intervals:[0,2,4,7,9] },
+    { key:"minorPenta",   label:"Pentatonique mineure",    intervals:[0,3,5,7,10] },
+    { key:"blues",        label:"Blues mineur",            intervals:[0,3,5,6,7,10] }
+  ];
+
+  var INTERVAL_LABELS = {
+    0:"Fondamentale (tonique)", 1:"Seconde mineure", 2:"Seconde majeure",
+    3:"Tierce mineure", 4:"Tierce majeure", 5:"Quarte juste",
+    6:"Quinte diminuée (triton)", 7:"Quinte juste", 8:"Sixte mineure",
+    9:"Sixte majeure", 10:"Septième mineure", 11:"Septième majeure"
+  };
+
+  var ORDINALS = ["1er","2e","3e","4e","5e","6e","7e"];
+
+  // string layout: top(thin/high) -> bottom(thick/low), note index C=0
+  var INSTRUMENTS = {
+    bass4: { name:"Basse 4 cordes", strings:[7,2,9,4] },          // G D A E
+    bass5: { name:"Basse 5 cordes", strings:[7,2,9,4,11] },       // G D A E B
+    guitar:{ name:"Guitare",        strings:[4,11,7,2,9,4] }      // E B G D A E
+  };
+
+  var FRETS = 12;
+
+  // ---------- state ----------
+  var state = {
+    notation: "fr",
+    instrument: "bass4",
+    root: 0,        // Do / C
+    scale: "major",
+    selected: null, // {string, fret}
+    mode: "explore", // "explore" | "quiz"
+    quiz: {
+      target: null,
+      correct: 0,
+      attempts: 0,
+      revealed: false,
+      wrongPos: null // {string, fret}
+    }
+  };
+
+  var quizAdvanceTimer = null;
+
+  function names(){ return state.notation === "fr" ? NAMES_FR : NAMES_EN; }
+  function noteName(i){ return names()[((i%12)+12)%12]; }
+
+  function scaleByKey(k){
+    for (var i=0;i<SCALES.length;i++) if (SCALES[i].key===k) return SCALES[i];
+    return SCALES[0];
+  }
+
+  function semitoneFromRoot(noteIdx){ return ((noteIdx - state.root) % 12 + 12) % 12; }
+
+  function noteRole(noteIdx){
+    var st = semitoneFromRoot(noteIdx);
+    if (st === 0) return "root";
+    var sc = scaleByKey(state.scale);
+    return sc.intervals.indexOf(st) !== -1 ? "scale" : "out";
+  }
+
+  // ---------- fret geometry (real proportional spacing) ----------
+  var SCALE_LEN = 900;
+  function fretX(n){ return SCALE_LEN - SCALE_LEN / Math.pow(2, n/12); }
+  function spaceCenter(n){ return n === 0 ? -46 : (fretX(n-1) + fretX(n)) / 2; }
+
+  var STRING_GAP = 46;
+  var TOP_PAD = 34;
+  var LEFT_PAD = 96;
+  var RIGHT_PAD = 34;
+  var BOTTOM_PAD = 34;
+
+  function svgEl(tag, attrs){
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function buildBoard(){
+    var inst = INSTRUMENTS[state.instrument];
+    var strings = inst.strings;
+    var nStrings = strings.length;
+    var height = TOP_PAD + (nStrings-1)*STRING_GAP + BOTTOM_PAD + 20;
+    var width = LEFT_PAD + fretX(FRETS) + RIGHT_PAD;
+
+    var svg = svgEl("svg", {
+      viewBox: "0 0 " + width + " " + height,
+      width: Math.max(width, 640),
+      height: height,
+      role: "img",
+      "aria-label": "Manche interactif de " + inst.name
+    });
+
+    // fingerboard background
+    svg.appendChild(svgEl("rect", {
+      x: LEFT_PAD - 60, y: TOP_PAD - 22,
+      width: fretX(FRETS) + 60 + 20, height: (nStrings-1)*STRING_GAP + 44,
+      rx: 10, fill: "url(#boardGrad)"
+    }));
+
+    var defs = svgEl("defs", {});
+    var grad = svgEl("linearGradient", { id:"boardGrad", x1:"0", y1:"0", x2:"0", y2:"1" });
+    grad.appendChild(svgEl("stop", { offset:"0%", "stop-color":"#33230f" }));
+    grad.appendChild(svgEl("stop", { offset:"100%", "stop-color":"#20150b" }));
+    defs.appendChild(grad);
+    svg.appendChild(defs);
+
+    // fret wires
+    for (var f=0; f<=FRETS; f++){
+      var x = LEFT_PAD + fretX(f);
+      svg.appendChild(svgEl("line", {
+        x1:x, y1:TOP_PAD-14, x2:x, y2:TOP_PAD+(nStrings-1)*STRING_GAP+14,
+        stroke: f===0 ? "var(--nut)" : "var(--fret-wire)",
+        "stroke-width": f===0 ? 5 : 2,
+        "stroke-linecap":"round"
+      }));
+    }
+
+    // inlay markers
+    var singleMarks = [3,5,7,9];
+    singleMarks.forEach(function(n){
+      if (n>FRETS) return;
+      var cx = LEFT_PAD + spaceCenter(n);
+      var cy = TOP_PAD + ((nStrings-1)*STRING_GAP)/2;
+      svg.appendChild(svgEl("circle", { cx:cx, cy:cy, r:5, fill:"var(--inlay)", opacity:"0.55" }));
+    });
+    if (FRETS>=12){
+      var cx12 = LEFT_PAD + spaceCenter(12);
+      [-1,1].forEach(function(dir){
+        svg.appendChild(svgEl("circle", {
+          cx:cx12, cy: TOP_PAD + ((nStrings-1)*STRING_GAP)/2 + dir*14,
+          r:5, fill:"var(--inlay)", opacity:"0.55"
+        }));
+      });
+    }
+
+    // fret number labels
+    for (var fn=0; fn<=FRETS; fn++){
+      var lx = LEFT_PAD + spaceCenter(fn===0?0:fn);
+      svg.appendChild(svgEl("text", {
+        x: fn===0 ? LEFT_PAD-46 : lx, y: TOP_PAD + (nStrings-1)*STRING_GAP + 34,
+        "text-anchor":"middle", "font-size":"11", fill:"var(--muted-2)",
+        "font-family":"Public Sans, sans-serif"
+      })).textContent = fn;
+    }
+
+    // strings + notes
+    strings.forEach(function(openNote, si){
+      var y = TOP_PAD + si*STRING_GAP;
+      var strokeW = 1 + si * 0.35; // cordes graves (bas du manche, si élevé) plus épaisses que les aiguës
+
+      svg.appendChild(svgEl("line", {
+        x1: LEFT_PAD-52, y1:y, x2: LEFT_PAD + fretX(FRETS) + 14, y2:y,
+        stroke:"#cbbf9e", "stroke-width": Math.min(strokeW,3.4), opacity:"0.75"
+      }));
+
+      // string name label
+      svg.appendChild(svgEl("text", {
+        x: LEFT_PAD-72, y: y+4, "text-anchor":"middle",
+        "font-size":"13", "font-weight":"600", fill:"var(--muted)",
+        "font-family":"Public Sans, sans-serif"
+      })).textContent = noteName(openNote);
+
+      for (var fret=0; fret<=FRETS; fret++){
+        var noteIdx = (openNote + fret) % 12;
+        var cx = LEFT_PAD + spaceCenter(fret);
+
+        var r, fill, stroke, opacity, showLabel, tcol;
+
+        if (state.mode === "quiz"){
+          var isTarget = noteIdx === state.quiz.target;
+          var isWrong = state.quiz.wrongPos && state.quiz.wrongPos.string===si && state.quiz.wrongPos.fret===fret;
+
+          if (state.quiz.revealed && isTarget){
+            r = 13; fill = "var(--scale)"; stroke = "none"; opacity = "1"; showLabel = true; tcol = "var(--scale-ink)";
+          } else if (isWrong){
+            r = 11; fill = "var(--wrong)"; stroke = "none"; opacity = "1"; showLabel = false;
+          } else {
+            r = 8; fill = "var(--fingerboard)"; stroke = "var(--muted-2)"; opacity = "0.6"; showLabel = false;
+          }
+        } else {
+          var role = noteRole(noteIdx);
+          r = role==="out" ? 8 : 13;
+          fill = role==="root" ? "var(--root)" : role==="scale" ? "var(--scale)" : "var(--fingerboard)";
+          stroke = role==="out" ? "var(--muted-2)" : "none";
+          opacity = role==="out" ? "0.55" : "1";
+          showLabel = role!=="out";
+          tcol = role==="root" ? "var(--root-ink)" : "var(--scale-ink)";
+        }
+
+        var isSel = state.mode==="explore" && state.selected && state.selected.string===si && state.selected.fret===fret;
+
+        var g = svgEl("g", {
+          class:"note-dot", tabindex:"0", role:"button",
+          "aria-label": state.mode==="quiz" ? ("case " + fret + (fret===0?" corde à vide":"")) : (noteName(noteIdx) + (fret===0? " corde à vide" : " case "+fret)),
+          "data-string": si, "data-fret": fret
+        });
+
+        g.appendChild(svgEl("circle", {
+          cx:cx, cy:y, r:r, fill:fill, stroke:stroke, "stroke-width":"1.4", opacity:opacity
+        }));
+
+        if (isSel){
+          g.appendChild(svgEl("circle", {
+            cx:cx, cy:y, r:r+4, fill:"none", stroke:"var(--focus)", "stroke-width":"2"
+          }));
+        }
+
+        if (showLabel){
+          var t = svgEl("text", {
+            x:cx, y:y+4, "text-anchor":"middle", "font-size":"10.5",
+            "font-weight":"700", fill:tcol, "font-family":"Public Sans, sans-serif",
+            "pointer-events":"none"
+          });
+          t.textContent = noteName(noteIdx);
+          g.appendChild(t);
+        }
+
+        g.addEventListener("click", noteClickDispatch);
+        g.addEventListener("keydown", function(e){
+          if (e.key==="Enter" || e.key===" "){ e.preventDefault(); noteClickDispatch.call(this,e); }
+        });
+
+        svg.appendChild(g);
+      }
+    });
+
+    var container = document.getElementById("boardScroll");
+    container.innerHTML = "";
+    container.appendChild(svg);
+  }
+
+  function onNoteClick(e){
+    var g = e.currentTarget;
+    var si = parseInt(g.getAttribute("data-string"),10);
+    var fret = parseInt(g.getAttribute("data-fret"),10);
+    state.selected = { string:si, fret:fret };
+    renderPanel();
+    buildBoard();
+  }
+
+  function noteClickDispatch(e){
+    if (state.mode === "quiz"){
+      var g = e.currentTarget;
+      var si = parseInt(g.getAttribute("data-string"),10);
+      var fret = parseInt(g.getAttribute("data-fret"),10);
+      handleQuizClick(si, fret);
+    } else {
+      onNoteClick(e);
+    }
+  }
+
+  // ---------- quiz mode ----------
+  function randomTarget(){
+    var choices = [];
+    for (var i=0;i<12;i++) if (i !== state.quiz.target) choices.push(i);
+    return choices[Math.floor(Math.random()*choices.length)];
+  }
+
+  function newQuestion(){
+    if (quizAdvanceTimer){ clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+    state.quiz.target = randomTarget();
+    state.quiz.revealed = false;
+    state.quiz.wrongPos = null;
+    renderQuizStatus("Clique sur le manche là où tu penses la trouver.", null);
+    buildBoard();
+  }
+
+  function handleQuizClick(si, fret){
+    if (state.quiz.revealed) return; // question already answered, wait for auto-advance
+    var inst = INSTRUMENTS[state.instrument];
+    var openNote = inst.strings[si];
+    var noteIdx = (openNote + fret) % 12;
+    state.quiz.attempts++;
+
+    if (noteIdx === state.quiz.target){
+      state.quiz.correct++;
+      state.quiz.revealed = true;
+      state.quiz.wrongPos = null;
+      renderQuizStatus("Bravo ! Voici toutes les positions de cette note sur le manche.", "correct");
+      buildBoard();
+      quizAdvanceTimer = setTimeout(function(){
+        if (state.mode === "quiz") newQuestion();
+      }, 1400);
+    } else {
+      state.quiz.wrongPos = { string:si, fret:fret };
+      renderQuizStatus("Pas encore — réessaie.", "wrong");
+      buildBoard();
+    }
+  }
+
+  function renderQuizStatus(message, kind){
+    var nameEl = document.getElementById("quizTargetName");
+    if (nameEl && state.quiz.target !== null) nameEl.textContent = noteName(state.quiz.target);
+    var scoreEl = document.getElementById("quizScore");
+    if (scoreEl) scoreEl.textContent = state.quiz.correct + " / " + state.quiz.attempts;
+    var fbEl = document.getElementById("quizFeedback");
+    if (fbEl){
+      fbEl.textContent = message;
+      fbEl.className = "quiz-feedback" + (kind ? " is-" + kind : "");
+    }
+  }
+
+  function startQuiz(){
+    state.mode = "quiz";
+    state.selected = null;
+    document.getElementById("exploreControls").style.display = "none";
+    document.getElementById("legend").style.display = "none";
+    document.getElementById("panel").style.display = "none";
+    document.getElementById("quizControls").style.display = "flex";
+    newQuestion();
+  }
+
+  function stopQuiz(){
+    if (quizAdvanceTimer){ clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+    state.mode = "explore";
+    document.getElementById("exploreControls").style.display = "flex";
+    document.getElementById("legend").style.display = "flex";
+    document.getElementById("panel").style.display = "flex";
+    document.getElementById("quizControls").style.display = "none";
+    buildBoard();
+    renderPanel();
+  }
+
+  function renderPanel(){
+    var panel = document.getElementById("panel");
+    if (!state.selected){
+      panel.innerHTML = '<div class="placeholder">Clique sur une note du manche pour découvrir son rôle dans la gamme choisie.</div>';
+      return;
+    }
+    var inst = INSTRUMENTS[state.instrument];
+    var openNote = inst.strings[state.selected.string];
+    var noteIdx = (openNote + state.selected.fret) % 12;
+    var role = noteRole(noteIdx);
+    var st = semitoneFromRoot(noteIdx);
+    var sc = scaleByKey(state.scale);
+
+    var locText = "Corde " + noteName(openNote) + (state.selected.fret===0 ? " · à vide" : " · case " + state.selected.fret);
+
+    var roleLine, body;
+    if (role==="root"){
+      roleLine = "Fondamentale";
+      body = "C'est la fondamentale de la gamme de " + noteName(state.root) + " " + sc.label.toLowerCase() + ". Toutes les autres notes de la gamme s'entendent par rapport à elle — c'est ton point de repère sur le manche.";
+    } else if (role==="scale"){
+      var idxInScale = sc.intervals.indexOf(st);
+      var ord = ORDINALS[idxInScale] || (idxInScale+1)+"e";
+      roleLine = ord + " degré — " + INTERVAL_LABELS[st];
+      body = "Cette note appartient à la gamme de " + noteName(state.root) + " " + sc.label.toLowerCase() + ". Elle sonnera consonante avec la fondamentale, tu peux t'y poser sans risque.";
+    } else {
+      roleLine = "Hors gamme — " + INTERVAL_LABELS[st];
+      body = "Cette note n'appartient pas à la gamme choisie. Elle peut créer une tension intéressante utilisée en passage, mais mieux vaut l'éviter sur les temps forts tant que l'oreille n'est pas exercée.";
+    }
+
+    panel.innerHTML =
+      '<div class="note-big role-' + role + '">' + noteName(noteIdx) + '</div>' +
+      '<div class="detail">' +
+        '<div class="loc">' + locText + '</div>' +
+        '<div class="role-line role-' + role + '">' + roleLine + '</div>' +
+        '<p>' + body + '</p>' +
+      '</div>';
+  }
+
+  function populateSelects(){
+    var rootSel = document.getElementById("rootSelect");
+    rootSel.innerHTML = "";
+    for (var i=0;i<12;i++){
+      var opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = noteName(i);
+      if (i===state.root) opt.selected = true;
+      rootSel.appendChild(opt);
+    }
+
+    var scaleSel = document.getElementById("scaleSelect");
+    scaleSel.innerHTML = "";
+    SCALES.forEach(function(s){
+      var opt = document.createElement("option");
+      opt.value = s.key;
+      opt.textContent = s.label;
+      if (s.key===state.scale) opt.selected = true;
+      scaleSel.appendChild(opt);
+    });
+  }
+
+  function goToBoard(instrumentKey){
+    state.instrument = instrumentKey;
+    state.selected = null;
+    if (quizAdvanceTimer){ clearTimeout(quizAdvanceTimer); quizAdvanceTimer = null; }
+    state.mode = "explore";
+    state.quiz = { target:null, correct:0, attempts:0, revealed:false, wrongPos:null };
+    document.getElementById("screen-select").style.display = "none";
+    document.getElementById("screen-board").style.display = "block";
+    document.getElementById("instTitle").textContent = INSTRUMENTS[instrumentKey].name;
+    var modeToggle = document.getElementById("modeToggle");
+    modeToggle.setAttribute("data-mode", "explore");
+    modeToggle.querySelectorAll(".seg").forEach(function(s){ s.classList.toggle("active", s.getAttribute("data-mode")==="explore"); });
+    document.getElementById("exploreControls").style.display = "flex";
+    document.getElementById("legend").style.display = "flex";
+    document.getElementById("panel").style.display = "flex";
+    document.getElementById("quizControls").style.display = "none";
+    populateSelects();
+    buildBoard();
+    renderPanel();
+  }
+
+  function goToSelect(){
+    document.getElementById("screen-board").style.display = "none";
+    document.getElementById("screen-select").style.display = "block";
+  }
+
+  function setNotation(mode){
+    state.notation = mode;
+    var toggle = document.getElementById("notationToggle");
+    toggle.setAttribute("data-mode", mode);
+    var segs = toggle.querySelectorAll(".seg");
+    segs.forEach(function(s){ s.classList.toggle("active", s.getAttribute("data-mode")===mode); });
+    if (document.getElementById("screen-board").style.display !== "none"){
+      populateSelects();
+      buildBoard();
+      renderPanel();
+      if (state.mode === "quiz"){
+        var nameEl = document.getElementById("quizTargetName");
+        if (nameEl && state.quiz.target !== null) nameEl.textContent = noteName(state.quiz.target);
+      }
+    }
+  }
+
+  // ---------- wire up ----------
+  document.querySelectorAll(".inst-card").forEach(function(btn){
+    btn.addEventListener("click", function(){ goToBoard(btn.getAttribute("data-instrument")); });
+  });
+
+  document.getElementById("backBtn").addEventListener("click", goToSelect);
+
+  document.getElementById("rootSelect").addEventListener("change", function(e){
+    state.root = parseInt(e.target.value,10);
+    state.selected = null;
+    buildBoard();
+    renderPanel();
+  });
+
+  document.getElementById("scaleSelect").addEventListener("change", function(e){
+    state.scale = e.target.value;
+    state.selected = null;
+    buildBoard();
+    renderPanel();
+  });
+
+  var toggleEl = document.getElementById("notationToggle");
+  toggleEl.addEventListener("click", function(){
+    setNotation(state.notation === "fr" ? "en" : "fr");
+  });
+  toggleEl.addEventListener("keydown", function(e){
+    if (e.key==="Enter" || e.key===" "){ e.preventDefault(); setNotation(state.notation === "fr" ? "en" : "fr"); }
+  });
+
+  function toggleAppMode(){
+    var next = state.mode === "quiz" ? "explore" : "quiz";
+    var modeToggle = document.getElementById("modeToggle");
+    modeToggle.setAttribute("data-mode", next);
+    modeToggle.querySelectorAll(".seg").forEach(function(s){ s.classList.toggle("active", s.getAttribute("data-mode")===next); });
+    if (next === "quiz") startQuiz(); else stopQuiz();
+  }
+
+  var modeToggleEl = document.getElementById("modeToggle");
+  modeToggleEl.addEventListener("click", toggleAppMode);
+  modeToggleEl.addEventListener("keydown", function(e){
+    if (e.key==="Enter" || e.key===" "){ e.preventDefault(); toggleAppMode(); }
+  });
+
+  document.getElementById("quizSkipBtn").addEventListener("click", function(){
+    if (state.quiz.revealed) return;
+    state.quiz.revealed = true;
+    renderQuizStatus("Voici où se trouve cette note sur le manche.", null);
+    buildBoard();
+    quizAdvanceTimer = setTimeout(function(){
+      if (state.mode === "quiz") newQuestion();
+    }, 1400);
+  });
+
+  document.getElementById("quizResetBtn").addEventListener("click", function(){
+    state.quiz.correct = 0;
+    state.quiz.attempts = 0;
+    newQuestion();
+  });
+
+})();
+</script>
+</body>
+</html>
